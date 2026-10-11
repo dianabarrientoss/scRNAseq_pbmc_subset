@@ -1,0 +1,520 @@
+---
+title: "QC_seurat_yalbi_filtrado"
+author: "Barrientos-González Diana, Cervantes-Levario Román & Contreras-Rivera Jair"
+date: "09-06-2026"
+output: html_notebook
+---
+
+## cargar datos filtrados:
+```{r}
+
+setwd("/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts")
+
+seurat_yalbi_filtrado <- readRDS("seurat_yalbi_filtrado.rds")
+
+set.seed(123)
+```
+Nota: para más información sobre los códigos que se muestra, consulte el archivo 'QC_seurat_filtrado.qmd', que contiene más comentarios de los códigos.
+
+
+## EXPLORAMOS EL ARCHIVO
+```{r}
+dim(seurat_yalbi_filtrado)                     # genes x células
+Assays(seurat_yalbi_filtrado)                  # RNA, SCT, etc.
+Layers(seurat_yalbi_filtrado[["RNA"]])         # counts, data, scale.data
+Reductions(seurat_yalbi_filtrado)              # pca, umap, tsne si existen
+colnames(seurat_yalbi_filtrado@meta.data)      # todas las columnas de metadatos
+str(seurat_yalbi_filtrado, max.level = 2)      # estructura completa
+summary(seurat_yalbi_filtrado$nCount_RNA)      # distribución de una métrica
+table(seurat_yalbi_filtrado$orig.ident)        # células por muestra
+head(rownames(seurat_yalbi_filtrado))          # nombres de genes
+```
+Observamos que está en terminos de ID de ensembl lo cual nos generará problemas en los ultimos paso
+readRDS carga un objeto Seurat con 38,606 genes y 3,427 células. Solo tiene el assay RNA con la capa counts, es decir, conteos crudos sin normalizar. Tampoco hay reducciones ni clusters.
+
+
+## CARGAMOS LOS GENES MITOCONDRIALES PARA CALCULAR EL PORCENTAJE DE RNA MITOCONDRIAL, CONTAMINACIÓN
+
+Primero seurat_cut_filtrado muestra el porcentaje de conteos de RNA que provienen de genes mitocondriales
+nFeature: genes detectados por célula
+nCount: cuánto RNA se detecta en cada célula
+percent.mt: proporción que corresponde a mitocondrial
+percent.ribo: proporción que corresponde a RNA ribosomal
+
+Para descartar contaminación por ARN ambiental, revisamos genes marcadores que no corresponden a la mayoría de las células de PBMC (HBB, HBA1, PPBP, IGKC y S100A8). En este subconjunto, HBB y HBA1 no se detectaron en ninguna célula, IGKC se concentró en el grupo de células B, y PPBP y S100A8 aparecieron solo en pocas células en lugar de distribuirse de forma uniforme, por lo que no encontramos evidencia de ARN ambiental.                                     
+                                                            
+```{r}
+library(ggplot2)
+seurat_yalbi_filtrado[["percent.mt"]] <- PercentageFeatureSet(seurat_yalbi_filtrado, pattern = "^MT-")
+seurat_cut_filtrado[["percent.ribo"]] <- PercentageFeatureSet(seurat_cut_filtrado, pattern = "^RP[SL]")
+
+
+figure_1 = VlnPlot(seurat_yalbi_filtrado,
+        features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
+        ncol = 4, col = "pink")
+figure_1.1 = VlnPlot(seurat_cut_filtrado, features = c("HBB", "HBA1", "PPBP", "IGKC", "S100A8"), pt.size = 0.5)
+figure_1
+figure_1.1
+ggsave(filename = "../figures/figure_1.jpg",
+       plot = figure_1,
+       height = 7, width = 12,
+       quality = 50)
+ggsave(filename = "../figures/figure_1.1.jpg",
+       plot = figure_1.1,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+HBB y HBA1 están en cero, lo que indica que no hay eritrocitos. IGKC se concentra en B, como se espera
+PPBP y S100A8 aparecen en muy pocas células, compatibles con dobletes.
+Es raro que S100A8 aparezca en memory CDT 4 pero no concluyente con pocas células.
+
+```{r}
+# FeatureScatter is typically used to visualize feature-feature relationships, but can be used
+# for anything calculated by the object, i.e. columns in object metadata, PC scores etc.
+
+figure_2 <- FeatureScatter(seurat_yalbi_filtrado, feature1 = "nCount_RNA", feature2 = "percent.mt")
+figure_3 <- FeatureScatter(seurat_yalbi_filtrado, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+#figure_4 <- FeatureScatter(seurat_yalbi_filtrado, feature1 = "nCount_RNA", feature2 = "percent.ribo") NO SE ENCONTRARON RNAS RIBOSOMALES
+figure_2
+figure_3
+
+ggsave(filename = "../figures/figure_2.jpg",
+       plot = figure_2,
+       height = 7, width = 12,
+       quality = 50)
+ggsave(filename = "../figures/figure_3.jpg",
+       plot = figure_3,
+       height = 7, width = 12,
+       quality = 50)
+
+
+```
+FeatureScatter grafica una métrica contra otra por cada célula
+En la figura 3, nCount y nFeature tienen correlación de 0.77, por lo que más RNA capturado significa más genes detectados
+
+
+## FILTRADO QC
+
+- Filtramos células con unique filter count mayor a 2,500 o menor a 200:
+
+- Filtramos células con >5% counts mitocondriales:
+
+```{r}
+seurat_yalbi_filtrado <- subset(seurat_yalbi_filtrado, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+```
+## PASO EXTRA, DE ENSEMBL ID A NOMBRES DE GENES
+
+Los identificadores de Ensembl de seurat_yalbi_filtrado se sustituyeron por símbolos de genes tomando los nombres de seurat_cut_filtrado, previa verificación de que ambos objetos tienen el mismo número y orden de genes (los genes sin símbolo conservaron su ID de Ensembl).
+
+```{r}
+library(Seurat)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+
+# Lee el archivo ORIGINAL (con IDs ENSG), no el que ya reconstruiste
+yalbi_orig <- readRDS("seurat_yalbi_filtrado.rds")
+
+ids <- rownames(yalbi_orig)
+symbols <- mapIds(org.Hs.eg.db, keys = ids, keytype = "ENSEMBL",
+                  column = "SYMBOL", multiVals = "first")
+tabla <- data.frame(ensembl = ids, symbol = unname(symbols))
+
+# verificación
+nrow(seurat_cut_filtrado) == nrow(yalbi_orig)
+
+nrow(seurat_cut_filtrado) == nrow(seurat_yalbi_filtrado)
+
+# cuántos barcodes del cut están en yalbi
+mean(colnames(seurat_cut_filtrado) %in% colnames(seurat_yalbi_filtrado))
+
+# genes: ¿coincide la posición de IDs que sí mapeaste?
+ok <- !is.na(tabla$symbol)
+mean(rownames(seurat_cut_filtrado)[ok] == tabla$symbol[ok])
+
+nuevo <- rownames(seurat_cut_filtrado)
+
+counts <- GetAssayData(seurat_yalbi_filtrado, layer = "counts")
+rownames(counts) <- nuevo
+
+seurat_yalbi_filtrado <- CreateSeuratObject(
+  counts = counts,
+  meta.data = seurat_yalbi_filtrado@meta.data,
+  project = "yalbi_filtrado"
+)
+
+head(rownames(seurat_yalbi_filtrado))
+sum(grepl("^ENSG", rownames(seurat_yalbi_filtrado)))   # los que quedaron sin símbolo
+
+saveRDS(seurat_yalbi_filtrado, "seurat_yalbi_filtrado_simbolos.rds")
+```
+> Nota: algunos genes quedaron sin renombrar, sin embargo este paso se debía realizar previo al subset y como se nos fue entregado el subset con ENSEMBL ID fue la única manera que encontramos para nombrarlos por genes:)
+
+La coincidencia con la tabla de mapeo fue de 91%, así que cerca de 9% de los genes podría estar mal nombrado. Además, 12,962 genes siguen con ID ENSG. Aun así, los genes de los PCs son biológicamente coherentes (LYZ, CD79A, NKG7), lo que sugiere que el mapeo si funciono.
+
+
+## NORMALIZACIÓN DEL DATA
+
+Después de remover las células no deseadas del dataset, el siguiente paso es normalizar nuestros datos con LogNormalize que normaliza las mediciones de expresión de características para cada célula mediante la expresión total, multiplica este valor por un factor de escala (10.000 por defecto) y aplica una transformación logarítmica al resultado. En Seurat v5, los valores normalizados se almacenan en seurat_yalbi_filtrado[["RNA"]]$data.
+
+```{r}
+seurat_yalbi_filtrado <- NormalizeData(seurat_yalbi_filtrado, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+
+```{r}
+seurat_yalbi_filtrado <- NormalizeData(seurat_yalbi_filtrado)
+```
+## Identificación de características altamente variables (selección de características)
+
+A continuación, calculamos un subconjunto de características que presentan una elevada variación entre células en el conjunto de datos (es decir, que se expresan en niveles altos en algunas células y en niveles bajos en otras).
+```{r}
+seurat_yalbi_filtrado <- FindVariableFeatures(seurat_yalbi_filtrado, selection.method = "vst", nfeatures = 2000) # se eligen 2,000 genes.
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(seurat_yalbi_filtrado), 10)
+
+# plot variable features with and without labels
+figure_4 <- VariableFeaturePlot(seurat_yalbi_filtrado)
+figure_5 <- LabelPoints(plot = figure_4, points = top10, repel = TRUE)
+
+figure_4_5 = figure_4 + figure_5
+
+figure_4_5
+ggsave(filename = "../figures/figure_4_5.jpg",
+       plot = figure_4_5,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+En la gráfica los puntos rojos son los variables y los negros el resto. Los más extremos son S100A8 y S100A9 (calprotecina, monocitos), GNLY (granulisina, citotóxicas y NK), LYZ (lisozima, monocitos).
+Tmabién genes como IGKC de cadenas ligeras de inmunoglobin.a
+Por ultimo, NKG7: gránulos citotóxicos.
+
+Así podemos ver que ya aparecen tres grupos: mieloide, B y citotóxico.
+
+
+## ESCALAR AL DATA
+
+Paso previo a reducción de dimensiones y análisis posteriores
+```{r}
+all.genes <- rownames(seurat_yalbi_filtrado)
+seurat_yalbi_filtrado <- ScaleData(seurat_yalbi_filtrado, features = all.genes)
+```
+
+**Removamos variación que no queremos, mt**
+
+```{r}
+seurat_yalbi_filtrado <- ScaleData(seurat_yalbi_filtrado, vars.to.regress = "percent.mt")
+```
+
+ScaleData convierte cada gen en media 0 y varianza 1.
+La segunda de mt solo escala los genes variables.
+
+## Realizar una reducción dimensional lineal.
+
+```{r}
+ncol(seurat_yalbi_filtrado)                    # células
+length(VariableFeatures(seurat_yalbi_filtrado)) # genes variables (si da 0, falta FindVariableFeatures)
+seurat_yalbi_filtrado <- RunPCA(seurat_yalbi_filtrado,
+                              features = VariableFeatures(seurat_yalbi_filtrado),
+                              npcs = 15) #tengo menos de 50 que es el default de la funcion
+```
+PCA resume los 2,000 genes variables en 15 componentes (se usan 15 porque el subset es chico).
+
+
+```{r}
+# Examine and visualize PCA results a few different ways
+print(seurat_yalbi_filtrado[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+Al igual que en el análisis anterior, los genes se investigaron en The Human Protein Atlas.
+PC1 separa monocitos (LYZ, FCN1, VCAN, S100A9) de un lado y genes ribosomales (RPS29, RPL3) del otro --> los linfocitos tienen mucha maquinaria ribosomal como vimos en el análisis anterior.
+PC2 separa células B (BANK1, CD79A, PAX5, HLA) de células T (CD247, IL7R, LEF1).
+PC3 aísla las citotóxicas (NKG7 y GNLY por ejemplo)
+PC4 y PC5 podrían distinguir tipos de células T
+
+La sigueinte figura sirve para visualizar los genes con más carga en PC1 y PC2, que están dentro de los ya mencionados. nota: IGHM y FRCL1 también es distintivo de linfocitos B:
+
+```{r}
+figure_6 = VizDimLoadings(seurat_yalbi_filtrado, dims = 1:2, reduction = "pca")
+figure_6
+ggsave(filename = "../figures/figure_6.jpg",
+       plot = figure_6,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+```{r}
+figure_7 = DimPlot(seurat_yalbi_filtrado, reduction = "pca") + NoLegend()
+figure_7
+ggsave(filename = "../figures/figure_7.jpg",
+       plot = figure_7,
+       height = 7, width = 12,
+       quality = 50)
+```
+Cada punto es una célula en el plano PC1–PC2, y se ven tres poblaciones separadas.
+A la derecha están los monocitos (PC1 alto), arriba, células B (PC2 alto) y en la parte inferior izquierda, linfocitos T y NK.
+
+
+```{r}
+figure_8 = DimHeatmap(seurat_yalbi_filtrado, dims = 1, cells = 500, balanced = TRUE)
+figure_8
+ggsave(filename = "../figures/figure_8.jpg",
+       plot = figure_8,
+       height = 7, width = 12,
+       quality = 50)
+```
+ordena las 500 células por su puntaje y muestra los 30 genes extremos. Se ven dos bloques casi opuestos: uno de ellos expresa mucho los ribosomales (amarillo) y el otro los mieloides pero no ribosomales (los ribosomales se ven morados).
+
+
+```{r}
+figure_9 = DimHeatmap(seurat_yalbi_filtrado, dims = 1:15, cells = 500, balanced = TRUE)
+figure_9
+ggsave(filename = "../figures/figure_9.jpg",
+       plot = figure_9,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+En los primeros tres componentes se sigue observando una separación de los tipos celulares (recordando que en este heatmap las columnas son células). Sin embargo, a partir de PC4, se vuelve difícil separarlos.
+# Determinar la dimensionalidad del conjunto de datos
+
+```{r}
+figure_10 = ElbowPlot(seurat_yalbi_filtrado)
+figure_10
+ggsave(filename = "../figures/figure_10.jpg",
+       plot = figure_10,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Muestra la desviación estándar de cada PC. Cae de forma abrupta hasta PC4 o 5. En este caso, se eligieron 10 componentes, al igual que en la referencia que usamos para el código (ver referencias en README).
+
+
+## Cluster de células
+
+**NOTA: ESTO NO SE DEBE REALIZAR, EN LA VIDA REAL, SOLO FUE PARA QUE NEUTSRO SUBSET MOSTRARA CLUSTERS, PERO EN GENERAL NO ES VÁLIDO HACER ETSO Y NECESIATRIAMOS UN SUBSET MÁS GRANDE O TODO EL DATA**
+```{r}
+
+seurat_yalbi_filtrado <- FindNeighbors(seurat_yalbi_filtrado, dims = 1:10)
+seurat_yalbi_filtrado <- FindClusters(seurat_yalbi_filtrado, resolution = 0.5)
+
+```
+FindNeighbors construye un grafo de vecinos más cercanos en 10 PCs. FindClusters aplica el algoritmo de Louvain con resolución 0.5.
+Se obtuvieron 11 clusters, con modularidad de 0.92. Es un valor alto e indica grupos bien separados.
+
+
+```{r}
+# Look at cluster IDs of the first 5 cells
+head(Idents(seurat_yalbi_filtrado), 5)
+```
+
+## Ejecutar reducción de dimensionalidad no lineal (UMAP)
+```{r}
+seurat_yalbi_filtrado <- RunUMAP(seurat_yalbi_filtrado, dims = 1:10)
+```
+
+```{r}
+figure_11 = DimPlot(seurat_yalbi_filtrado, reduction = "umap")
+figure_11
+ggsave(filename = "../figures/figure_11.jpg",
+       plot = figure_11,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Se ven grupos claros. Los clusters 5 y 6 están cerca pero se distinguen abajo. Arriba a la derecha hay un único grupo. Los clusters 0, 1 y 2 podrían ser células T con algunas diferencias enytre ellas.
+La cadena que se observa arriba a la izquierda podría indicar que son T CD8 y células citotóxicas.
+
+
+## Identificación de características expresadas diferencialmente (biomarcadores de clúster)
+
+```{r}
+# find all markers of cluster 2
+cluster2.markers <- FindMarkers(seurat_yalbi_filtrado, ident.1 = 2)
+head(cluster2.markers, n = 5)
+```
+FindMarkers compara un cluster contra otro grupo (cluster 2 contra todos, o cluster 5 contra 0 y 3) con la prueba de Wilcoxon.
+avg_log indica cuánto más se expresa un gen, pct1 fracción de células de ese grupo que lo expresan, pct2 son células que lo expresan pero que no son de ese grupo, y p-valores.
+
+Estos genes que se muestran son marcadores clásicos de linfocitos T, aunque los log2FC son moderados porque los subtipos de T se parecen mucho entre sí
+
+
+```{r}
+#ahora markers para CLUSTER 5:
+cluster5.markers <- FindMarkers(seurat_yalbi_filtrado, ident.1 = 5, ident.2 = c(0, 3))
+head(cluster5.markers, n = 5)
+
+```
+Los 5 genes principales se expresan en linfocitos B, aunque no indica el subtipo de célula B. Sin embargo, es fácil verlo haciendo otra comparación como esta entre cluster 5 y 6 y ahí analizar los genes específicos de cada uno.
+
+
+FindAllMarkers lo hace para todos los clusters a la vez y los reusltados son congruentes con los anteriores:
+```{r}
+# find markers for every cluster compared to all remaining cells, report only the positive
+# ones
+library(dplyr)
+
+seurat_yalbi_filtrado.markers <- FindAllMarkers(seurat_yalbi_filtrado, only.pos = TRUE)
+seurat_yalbi_filtrado.markers %>%
+    group_by(cluster) %>%
+    dplyr::filter(avg_log2FC > 1)
+```
+
+```{r}
+cluster0.markers <- FindMarkers(seurat_yalbi_filtrado, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+```
+
+
+> Nota los genes utilziados son los que encontramos en al referencia de seurat:)
+
+```{r}
+figure_12 = VlnPlot(seurat_yalbi_filtrado, features = c("MS4A1", "CD79A"))
+
+figure_12
+ggsave(filename = "../figures/figure_12.jpg",
+       plot = figure_12,
+       height = 7, width = 12,
+       quality = 50)
+```
+En estas gráficas se observa que MS4A1y CD79A están muy altos solo en clusters 5 y 6, por lo cual podrían identificarse como de tipo B.
+
+
+```{r}
+# you can plot raw counts as well
+figure_13 = VlnPlot(seurat_yalbi_filtrado, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
+figure_13
+ggsave(filename = "../figures/figure_13.jpg",
+       plot = figure_13,
+       height = 7, width = 12,
+       quality = 50)
+```
+NKG7 se observa más en el cluster 9, 10 y un poco en 7, lo cual los marcaría como citotóxicos.
+Por otro lado, PF4 no se expresa (casi nulo), lo cual descartaría plaquetas en el análsis.
+
+```{r}
+figure_14 = FeaturePlot(seurat_yalbi_filtrado, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", "FCGR3A", "LYZ", "PPBP",
+    "CD8A"))
+figure_14
+ggsave(filename = "../figures/figure_14.jpg",
+       plot = figure_14,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Pinta la expresión de cada marcador sobre el UMAP. MS4A1 está en los clusters B, CD14 y LYZ en monocitos, y CD3E en el grup T
+GNLY y FCGR3A (CD16) se concentran en el extremo NK.
+CD8A se ve en el grupo de linfocitos T
+FCER1A y PPBP están vacpios como habíamos visto.
+
+Ahora se muestran los 10 mejores marcadores de cada cluster en todas las células
+```{r}
+top10 <- seurat_yalbi_filtrado.markers %>%
+    group_by(cluster) %>%
+    dplyr::filter(avg_log2FC > 1) %>%
+    slice_head(n = 10) %>%
+    ungroup() 
+
+top10
+figure_15 = DoHeatmap(seurat_yalbi_filtrado, features = top10$gene) + NoLegend()
+figure_15
+# se guarda la figura
+ggsave(filename = "../figures/figure_15.jpg",
+       plot = figure_15,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Se ven bloques amarillos nítidos en el cluster 4 (monocitos), en 5 y 6 (B), 9 y 10 (citotóxicos). Sin embargo, es difícil distinguir todos los genes del eje Y, por lo cual se podría analizar un grupo más prqueño.
+
+## ASIGNAR TIPO CELULAR A LOS CLUSTERS
+
+Los clusters se anotaron identificando los genes marcadores de cada uno con FindAllMarkers (prueba de Wilcoxon, solo genes sobreexpresados) y comparándolos con marcadores canónicos de las poblaciones de células de sangre periférica (por ejemplo CD8A/CD8B para T CD8, LEF1 para T CD4 naive, S100A12/CSTA para monocitos, TCL1A para B naive, JCHAIN para plasmablastos y NCR1/NCAM1 para NK), apoyándonos en un DotPlot de marcadores conocidos.
+
+
+```{r}
+library(Seurat)
+library(dplyr)
+
+#  Marcadores de cada cluster (sin los genes sin nombre)
+markers <- FindAllMarkers(seurat_yalbi_filtrado, only.pos = TRUE,
+                          min.pct = 0.25, logfc.threshold = 0.25)
+
+top5 <- markers %>%
+  filter(!grepl("^ENSG", gene)) %>%
+  group_by(cluster) %>%
+  slice_max(avg_log2FC, n = 5)
+
+print(top5, n = 55)
+
+# Verificación con marcadores canónicos (antes de renombrar)
+figure_dotplot <- DotPlot(seurat_yalbi_filtrado,
+        features = c("CD3E", "CD4", "CD8A", "CD8B", "CCR7", "IL7R", "S100A4", "KLRB1",
+                     "CCL5", "GNLY", "NKG7", "NCAM1", "MS4A1", "TCL1A", "JCHAIN",
+                     "CD14", "LYZ", "S100A12")) +
+  RotatedAxis()
+figure_dotplot
+
+```
+
+cada fila es un cluster y cada columna un gen. El color indica cuánto se expresa el gen (azul oscuro, más) y el tamaño del punto qué porcentaje de células lo expesan.
+la figura confirma los grandes linajes. Los T expresan CD3E y los NK no. Se distuinguen los T naive de los T CD4NK es el único con GNLY, NKG7 y NCAM1 muy altos.
+Las B tienen MS4A1 y TCL1A
+
+```{r}
+
+# 3. Asignar una etiqueta por cluster (en el orden de levels())
+new.cluster.ids <- c("T CD4 naive",            # 0
+                     "T (alto ribosomal)",     # 1
+                     "T CD4 memoria",          # 2
+                     "T CD8 naive",            # 3
+                     "Monocitos CD14+",        # 4
+                     "Plasmablastos",          # 5
+                     "B naive",                # 6
+                     "T CD8 efectoras",        # 7
+                     "T CD8 naive",            # 8
+                     "NK",                     # 9
+                     "MAIT")                   # 10
+
+length(new.cluster.ids) == length(levels(seurat_yalbi_filtrado))
+
+names(new.cluster.ids) <- levels(seurat_yalbi_filtrado)
+seurat_yalbi_filtrado <- RenameIdents(seurat_yalbi_filtrado, new.cluster.ids)
+
+# 4. UMAP anotado
+figure_16 <- DimPlot(seurat_yalbi_filtrado, reduction = "umap",
+                     label = TRUE, repel = TRUE, pt.size = 0.5) + NoLegend()
+figure_16
+
+ggsave(filename = "../figures/figure_dotplot.jpg", plot = figure_dotplot,
+       height = 7, width = 12, quality = 50)
+
+ggsave(filename = "../figures/figure_16.jpg", plot = figure_16,
+       height = 7, width = 12, quality = 50)
+
+
+```
+
+```{r}
+
+figure_17 <- DimPlot(seurat_yalbi_filtrado, reduction = "umap", label = TRUE, label.size = 4.5) + xlab("UMAP 1") + ylab("UMAP 2") +
+    theme(axis.title = element_text(size = 18), legend.text = element_text(size = 18)) + guides(colour = guide_legend(override.aes = list(size = 10)))
+
+figure_17
+
+ggsave(filename = "../figures/figure_17.jpg",
+       plot = figure_17,
+       height = 7, width = 12,
+       quality = 50)
+
+```
+
+Finalmente:
+Cada cluster se identificó con FindAllMarkers y se comparó con marcadores canónicos de sangre (el Dotplot confirma la anotación). 
+LLas figuras 16 y 17 muestran el mismo UMAP con las etiquetas asignadas.
+Los tipos celulares forman islas separadas: monocitos arriba a la derecha, B y plasmablastos abajo a la derecha, T CD4 en el centro y una cadena T CD8, efectoras y NK hacia la izquierda.
+
+
+```{r}
+print(sessionInfo())
+```
