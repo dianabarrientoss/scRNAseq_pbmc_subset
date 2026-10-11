@@ -1,0 +1,486 @@
+---
+title: "QC_seurat_cut_filtrado"
+author: "Barrientos-González Diana, Cervantes-Levario Román & Contreras-Rivera Jair"
+date: "09-06-2026"
+output: html_notebook
+---
+
+## CARGAMOS LOS DATOS FILTRADOS
+```{r}
+
+setwd("/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts")
+
+seurat_cut_filtrado <- readRDS("seurat_cut_filtrado.rds")
+```
+
+```{r}
+set.seed(123)
+```
+
+## EXPLORAMOS EL ARCHIVO
+```{r}
+dim(seurat_cut_filtrado)                     # genes x células
+Assays(seurat_cut_filtrado)                  # indica qué tipo de datos moleculares vienen en el objeto (RNA en este caso)
+Layers(seurat_cut_filtrado[["RNA"]])         # por ahora la única capa es counts, pero después de normalizar y escalar será: counts, data, scale.data
+Reductions(seurat_cut_filtrado)              # pca, umap, tsne si existen (aún no se hace --> NULL)
+colnames(seurat_cut_filtrado@meta.data)      # todas las columnas de metadatos
+```
+orig.ident: origen de la muestra a la que pertenece la célula
+nCount_RNA: número de RNAs detectados en esa célula
+nFeature_RNA: número de genes distintos (no moléculas) detectados en cada célula
+
+```{r}
+str(seurat_cut_filtrado, max.level = 2)      # estructura completa
+summary(seurat_cut_filtrado$nCount_RNA)      # distribución de una métrica: distribución de los conteos de RNA
+table(seurat_cut_filtrado$orig.ident)        # células por muestra
+head(rownames(seurat_cut_filtrado))          # nombres de genes, hay tanto símbolos de genes como identificadores ENSG
+```
+
+## CARGAMOS LOS GENES MITOCONDRIALES PARA CALCULAR EL PORCENTAJE DE RNA MITOCONDRIAL, CONTAMINACIÓN
+Primero seurat_cut_filtrado muestra el porcentaje de conteos de RNA que provienen de genes mitocondriales
+nFeature: genes detectados por célula
+nCount: cuánto RNA se detecta en cada célula
+percent.mt: proporción que corresponde a mitocondrial
+percent.ribo: proporción que corresponde a RNA ribosomal
+
+Para descartar contaminación por ARN ambiental, revisamos la expresión de genes marcadores que no corresponden a PBMC o que se esperan en tipos celulares muy específicos (HBB, HBA1, PPBP, IGKC y S100A8): HBB y HBA1 no se detectaron en ninguna célula, y PPBP, IGKC y S100A8 aparecieron solo en unas pocas con valores altos, lo que sugiere expresión propia de esas células (plaquetas pegadas, linfocitos B o monocitos) y no un fondo uniforme de ARN ambiental.Esto en el fondo ya lo sabíamos por lo pequeño que es nuestro dataset por eso ningún control ambiental como SOupex fue realizado con anterioridad pero si en este paso hubiermaos encontrado lo contrario, nuestra metodología habría que ampliarse con ese paso extra.
+                                     
+                                                            
+```{r}
+library(ggplot2)
+seurat_cut_filtrado[["percent.mt"]] <- PercentageFeatureSet(seurat_cut_filtrado, pattern = "^MT-")
+seurat_cut_filtrado[["percent.ribo"]] <- PercentageFeatureSet(seurat_cut_filtrado, pattern = "^RP[SL]")
+
+figure_a = VlnPlot(seurat_cut_filtrado,
+        features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"),
+        ncol = 4, col = "pink")
+# ¿aparecen genes de otros tipos en todas partes?
+figure_a1  = VlnPlot(seurat_cut_filtrado, features = c("HBB", "HBA1", "PPBP", "IGKC", "S100A8"), pt.size = 0.5)
+
+figure_a
+figure_a1
+ggsave(filename = "../figures/figure_a.jpg",
+       plot = figure_a,
+       height = 7, width = 12,
+       quality = 50)
+ggsave(filename = "../figures/figure_a1.jpg",
+       plot = figure_a1,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+
+Ahora observamos: nCount_RNA contra percent.mt.	Las células con	más RNA	tienen también más porcentaje mitocondrial? (primer gráfico abajo)
+
+También analizamos si las células que tienen más RNAs, tienes también más genes	(segundo gráfico):
+
+nCount_RNA contra percernt.ribo.	Las células con	más RNA	tienen también más porcentaje de RNA ribosomal?
+```{r}
+# FeatureScatter se usa para visualizar relaciones entre características pero puede usar para cualquier elemento calculado
+# por el objeto como columnas de metadatos y PC scores
+
+figure_b <- FeatureScatter(seurat_cut_filtrado, feature1 = "nCount_RNA", feature2 = "percent.mt")
+figure_c <- FeatureScatter(seurat_cut_filtrado, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+figure_d <- FeatureScatter(seurat_cut_filtrado, feature1 = "nCount_RNA", feature2 = "percent.ribo")
+figure_b
+figure_c
+figure_d
+
+ggsave(filename = "../figures/figure_b.jpg",
+       plot = figure_b,
+       height = 7, width = 12,
+       quality = 50)
+ggsave(filename = "../figures/figure_c.jpg",
+       plot = figure_c,
+       height = 7, width = 12,
+       quality = 50)
+ggsave(filename = "../figures/figure_d.jpg",
+       plot = figure_d,
+       height = 7, width = 12,
+       quality = 50)
+```
+## FILTRADO QC
+
+- Filtramos células con unique filter count mayor a 2,500 o menor a 200:
+
+- Filtramos células con >5% counts mitocondriales:
+
+- El filtro por percent.ribo no es estándar como el de mt po rlo cual no lo incluimos
+
+```{r}
+seurat_cut_filtrado <- subset(seurat_cut_filtrado, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+```
+
+## NORMALIZACIÓN DEL DATA
+
+Después de remover las células no deseadas del dataset, el siguiente paso es normalizar nuestros datos con LogNormalize que normaliza las mediciones de expresión de características para cada célula mediante la expresión total, multiplica este valor por un factor de escala (10.000 por defecto) y aplica una transformación logarítmica al resultado. En Seurat v5, los valores normalizados se almacenan en seurat_cut_filtrado[["RNA"]]$data.
+```{r}
+seurat_cut_filtrado <- NormalizeData(seurat_cut_filtrado, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+
+```{r}
+seurat_cut_filtrado <- NormalizeData(seurat_cut_filtrado)
+```
+## Identificación de características altamente variables (selección de características)
+
+A continuación, calculamos un subconjunto de características que presentan una elevada variación entre células en el conjunto de datos (es decir, que se expresan en niveles altos en algunas células y en niveles bajos en otras).
+```{r}
+seurat_cut_filtrado <- FindVariableFeatures(seurat_cut_filtrado, selection.method = "vst", nfeatures = 2000)
+
+# Identificar los 10 genes más variables
+top10 <- head(VariableFeatures(seurat_cut_filtrado), 10)
+
+# graficar los variable features con y sin labels
+figure_e <- VariableFeaturePlot(seurat_cut_filtrado)
+figure_f <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+figure_ef = figure_e + figure_f
+
+figure_ef
+ggsave(filename = "../figures/figure_ef.jpg",
+       plot = figure_ef,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+En esta gráfica, cada punto es un gen y los que se destacan son aquellos que presentan alta variablidad entre células.
+CD74 y HLA-DRA son genes de presentación de antígeno que se expresan en linfocitos B y dendríticas, pero no en los T. Esto indica que ya hay cierta separación.
+
+## ESCALAR AL DATA
+
+Paso previo a reducción de dimensiones y análisis posteriores
+```{r}
+all.genes <- rownames(seurat_cut_filtrado)
+seurat_cut_filtrado <- ScaleData(seurat_cut_filtrado, features = all.genes)
+```
+
+**Removamos variación que no queremos, mt para que mitocondrial no se convierta en un cluster artificial**
+
+```{r}
+seurat_cut_filtrado <- ScaleData(seurat_cut_filtrado, vars.to.regress = "percent.mt")
+```
+
+## Realizar una reducción dimensional lineal.
+
+```{r}
+ncol(seurat_cut_filtrado)                    # células. Confirmamos cuántas quedaron tras el filtrado
+length(VariableFeatures(seurat_cut_filtrado)) # genes variables (si da 0, falta FindVariableFeatures)
+
+```
+
+Ahora sí, correr el PCA:
+```{r}
+seurat_cut_filtrado <- RunPCA(seurat_cut_filtrado,
+                              features = VariableFeatures(seurat_cut_filtrado),
+                              npcs = 15) #tengo menos de 50 que es el default de la funcion
+```
+
+```{r}
+# Examine and visualize PCA results a few different ways
+print(seurat_cut_filtrado[["pca"]], dims = 1:5, nfeatures = 5)
+```
+Buscando en The Human Protein Atlas:
+los que aparecen positivos de PC1 son genes ribosomales, mientras que en el negativo encontramos genes expresados principalmente en monocitos.
+
+PC2: los positivos son genes que se expresan principalmente en células dendríticas y linfocitos B. Mientras que los del polo negativo son característicos de T-cells. Esto indica una separación que puede ser interesante para los T-cells.
+
+PC3: el positivo muestra otro grupo de genes ribosomales, mientras que el negativo muestra factores de splicing, autofagia y metabolismo de pterinas.
+
+PC3, PC4 y PC5 contienen genes que no necesariamente se encuentran expresados en un único tipo celular, sino que son importantes en procesos como ciclo celular y metabolismo.
+
+
+```{r}
+figure_g = VizDimLoadings(seurat_cut_filtrado, dims = 1:2, reduction = "pca")
+figure_g
+ggsave(filename = "../figures/figure_g.jpg",
+       plot = figure_g,
+       height = 7, width = 12,
+       quality = 50)
+```
+En esta gráfica vemos los genes que más contribuyen para PC1 y PC2
+
+**PC1**: los principales son CPNE8 (en el sistema inmune, se expresa en monocitos y macrófagos, al igual que en linfocitos B) y genes expresados casi exclusivamente en neutrófilos: LRRK2, RGS2 y CLEC12A.
+**PC2++: los genes que más contribuyen en ese componente son BCL11A (altamente expresado en células dendríticas, al igual que HLA-DRB1), KHDRBS2 (se ve expresado en su mayoría por células neuronales, pero también en linfocitos B, al igual que BANK1 y ADAM28).
+
+Esto indica que PC1 está capturando variabilidad relacionada con células de inmunidad innata (neutrófilos y macrófagos).
+Por otro lado, PC2 refleja actividad de inmunidad adaptativa y presentación de antígenos. Hay varios genes relacionados con el complejo mayor de histocompatibilidad y expresados en células B.
+
+
+```{r}
+figure_h = DimPlot(seurat_cut_filtrado, reduction = "pca") + NoLegend()
+figure_h
+ggsave(filename = "../figures/figure_h.jpg",
+       plot = figure_h,
+       height = 7, width = 12,
+       quality = 50)
+
+```
+Indica células con una expresión parecida.
+
+```{r}
+figure_i = DimHeatmap(seurat_cut_filtrado, dims = 1, cells = 500, balanced = TRUE)
+figure_i
+ggsave(filename = "../figures/figure_i.jpg",
+       plot = figure_i,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+En la parte de arriba se encuentran los genes con mayor loading positivo, abajo negativo. 
+En esta gráfica, se observan genes que son marcadores de monocitos, como FCN1, SLC11A1 y LRMDA. Como el color amarillo indica alta expresión, vemos que las células (columnas) de la izquierda podrían pertenecer al mismo grupo.
+Los genes en la parte de abajo de la gráfica son principalmente ribosomales, que separan monocitos de linfocitos (los linfocitos tienen más expresión de ribosomales). Como vemos, los que tienen amarillo en las filas de arriba, son moradas abajo (baja expresión de los ribosomales).
+
+```{r}
+figure_j = DimHeatmap(seurat_cut_filtrado, dims = 1:15, cells = 500, balanced = TRUE)
+figure_j
+ggsave(filename = "../figures/figure_j.jpg",
+       plot = figure_j,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Aunque estas gráficas muestran más genes, sí podemos ver por ejemplo en PC2 lo que se mencionó previamente, que separa los linfocitos B de otros tipos celulares (porque aparecen genes específicos de este tipo celular y se observa un bloque separado, del lado izquierdo.
+Podemos ver cómo con mayor número de PCs,decae la señal y se dificulta distinguir grupos, a partir de 5 o 6 componentes.
+
+
+# Determinar la dimensionalidad del conjunto de datos
+
+```{r}
+figure_k = ElbowPlot(seurat_cut_filtrado)
+figure_k
+ggsave(filename = "../figures/figure_k.jpg",
+       plot = figure_k,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+## Cluster de células
+
+**NOTA: ESTO NO SE DEBE REALIZAR EN LA VIDA REAL, SOLO FUE PARA QUE NUESTRO SUBSET MOSTRARA CLUSTERS, PERO EN GENERAL NO ES VÁLIDO HACER ESTO Y NECESITARÍAMOS UN SUBSET MÁS GRANDE O TODO EL DATA**
+Primero: grafo para conectar cada célula con sus k vecinas más parecidas:
+```{r}
+seurat_cut_filtrado <- FindNeighbors(seurat_cut_filtrado, dims = 1:10, k.param = 5)#subimos k.param para que encuentre clusters con datos muy chicos
+seurat_cut_filtrado <- FindClusters(seurat_cut_filtrado, resolution = 1.5) #generalmente resolution está entre 0.8 y 1.5. más alto es para forzar clusters en pocas células
+```
+
+
+```{r}
+#Ver los IDs de cluster de las primeras 5 células:
+head(Idents(seurat_cut_filtrado), 5)
+```
+
+## Ejecutar reducción de dimensionalidad no lineal (UMAP)
+
+```{r}
+seurat_cut_filtrado <- RunUMAP(seurat_cut_filtrado, dims = 1:10,  n.neighbors = 3) #vecinos por default es 30 y tenemos menos células, 28, así que ponemos 3
+```
+**NOTA: SE ESCOGIÓ EL UMAP QUE SE VIERA ESTÉTICAMENTE MEJOR, PERO ESTO NO TIENE BUENA INTERPRETACIÓN BIOLÓGICA POR EL SUBSET PEQUEÑO**
+
+
+```{r}
+figure_l = DimPlot(seurat_cut_filtrado, reduction = "umap")
+figure_l
+ggsave(filename = "../figures/figure_l.jpg",
+       plot = figure_l,
+       height = 7, width = 12,
+       quality = 50)
+```
+La gráfica muestra un grupo muy separado a la izquierda, con células del cluster 0 y 2
+También se observa un grupo con células del grupo 3 y 0 arriba, que coincide con células B.
+Por último, hay una mezcla de tres clusters: 1, 4 y 2.
+
+Observamos que el cluster 2 está partido en dos regiones, lo cual indicaría que son grupos de células heterogéneas.
+
+Sin embargo, este análisis es complicado debido al escaso número de células, por lo cual estas separaciones no son confiables.
+
+
+## Identificación de características expresadas diferencialmente (biomarcadores de cluster)
+
+```{r}
+# ver todos los marcadores de cluster 2
+#(Por defecto usa la prueba wilcoxon)
+cluster2.markers <- FindMarkers(seurat_cut_filtrado, ident.1 = 2)
+head(cluster2.markers, n = 5)
+```
+Compara las 5 células del cluster 2 contra el resto:
+pct1 es el porcentaje de células que expresan dicho gen (dentro de cluster 2), mientras que pct2 es el porcentaje de células fuera de cluster 2 que lo expresan. Sí se ve que el resto no lo expresan, pero no es significativo realmente por el tamaño de muestra.
+
+```{r}
+# encontrar todos los marcadores separando el cluster 5 del 0 y 3
+levels(Idents(seurat_cut_filtrado))
+table(Idents(seurat_cut_filtrado))
+```
+Confirman los clusters y su tamaño: 8 + 7 + 5 + 4 + 4 = 28
+
+Comparar el cluster 4 contra el 0 y el 3:
+```{r}
+#cluster5.markers <- FindMarkers(seurat_cut_filtrado, ident.1 = 5, ident.2 = c(0, 3)) EN NUESTRO CASO ESTO NO SIRVE
+#head(cluster5.markers, n = 1) TAMPOCO SIRVE
+markers_4 <- FindMarkers(seurat_cut_filtrado, ident.1 = 4, ident.2 = c(0, 3))
+head(markers_4, n = 5)
+
+```
+TMEM263: protweína transmembrana pero no se conoce mucho su función
+RWDD1: función poco clara
+LAMTOR4: participa en el sensado de nutrientes
+WWP1: ubiquitina ligasa 3
+LAT: esta gen sí tiene un significado claor para este tipo celular: se llama Linker for Activation of T cells, para el receptor TCR. Define identiddad del tipo celular.
+
+
+```{r}
+#Ahora encontrar marcadores para cada cluster en comparación con todas las células restantes. Indformar solo los positivos:
+library(dplyr)
+
+seurat_cut_filtrado.markers <- FindAllMarkers(seurat_cut_filtrado, only.pos = TRUE) #TRUE significa que conserva solo genes más expresados en el cluster
+seurat_cut_filtrado.markers %>%
+    group_by(cluster) %>%
+    dplyr::filter(avg_log2FC > 1)
+```
+
+Esto repite Findmarkers para cada cluster contra el resto.
+Resultado: 712 filas en total.
+Que el cluster 2 tenga 256 no significa que sea distinto, cualquier gen puede salir inflado con pocas células.
+
+Cluster 0: solo genes ribosomales pero todos los células lo expresan
+
+Cluster 3: tiene firmas de linfocitos B --> genes como FCRL1, BANK1, HLA-DR, CD79A/B, etc
+
+
+```{r}
+cluster0.markers <- FindMarkers(seurat_cut_filtrado, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+```
+Ahora, en lugar de wilcoxon, se calcula por gen el área bajo la curva ROC (qué tan bien ese gen separa el cluster 0 del resto). 
+El cluster 0 tiene alta expresión de ribosomales, compatible con linfocitos T, pero con un subset de 28 células no es posible confirmarlo, no es signficativo.
+
+
+Ahora, se hace una grafica violin, donde los genes escogidos por cluster son: RPS3A (0), R3HDM2 (1), CLTA (2), FCRL1 (3), TNPO1 (4):
+```{r}
+figure_m = VlnPlot(seurat_cut_filtrado, features = c("RPS3A", "R3HDM2", "CLTA", "FCRL1", "TNPO1"))#ESCOGIDOS POR CADA CLUSTER LOS GENES MAS REPRESENTATIVOS Y GRAFICAMOS
+figure_m
+ggsave(filename = "../figures/figure_m.jpg",
+       plot = figure_m,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Vemos RPS3A expresado en todos (es el ribosomal), R3HDM2 está más expresado en cluster 1, CLTA para ser específico, pero es solo 1.25 en expression level. FCRL1 sí es coherente con linfocitos B. TNPO1 también parecería específico.
+
+
+```{r}
+# también puedes hacer grpaficas de cuentas crudas:
+figure_n = VlnPlot(seurat_cut_filtrado, features = c("RPS3A", "R3HDM2", "CLTA", "FCRL1", "TNPO1"), slot = "counts", log = TRUE)
+```
+CLTA, FCRL1 y TNPO1 tienen solo de 1 a 10 UMIs, lo cual confirma que los genes marcadores están en el límite de la detección
+
+
+```{r}
+figure_n
+ggsave(filename = "../figures/figure_n.jpg",
+       plot = figure_n,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+pintar cada célula del UMAP según la expresión del gen (gris = baja/cero, azul = alta):
+confirma lo que	vimos anteriormente en realidad
+
+```{r}
+figure_o = FeaturePlot(seurat_cut_filtrado, features = c("RPS3A", "R3HDM2", "CLTA", "FCRL1", "TNPO1"))
+figure_o
+ggsave(filename = "../figures/figure_o.jpg",
+       plot = figure_o,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+
+```{r}
+# la tabla con los top genes (se guarda, no se imprime)
+top10 <- seurat_cut_filtrado.markers %>%   # toma las primeras 10 filas de cada cluster
+  group_by(cluster) %>%
+  dplyr::filter(avg_log2FC > 1) %>%
+  slice_head(n = 10) %>%
+  ungroup()
+top10
+#  el heatmap se guarda en figure_p
+figure_p <- DoHeatmap(seurat_cut_filtrado, features = top10$gene) + NoLegend()
+
+figure_p
+# se guarda la figura
+ggsave(filename = "../figures/figure_p.jpg",
+       plot = figure_p,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Cluster 0: ribosomales ligeramente más altos, pero sin contraste fuerte
+Cluster 1: TECPR1 muestra una señal parcial
+Cluster 2: AQR, GALNS y RTCB amarillos en 3-4 células, con un cluster ribosomal morado (bajo)
+Cluster 3: el bloque más nítido. Varios genes desde FCRL1 hasta ADAM28 salen amarilos (ya se han mencionado estos genes y su relevancia)
+Cluster 4: TNPO1, ACER2 y WDR45 amarillos. Probablemente no son significativos, son genes que se expresan de forma general en varios tipos celulares.
+
+## Asignar tipo celular a los clusters:
+
+Cluster ID	Markers	Cell Type
+
+0	IL7R, CCR7	Naive CD4+ T
+
+1	CD14, LYZ	CD14+ Mono
+
+2	IL7R, S100A4	Memory CD4+
+
+3	MS4A1	B
+
+4	CD8A	CD8+ T
+
+5	FCGR3A, MS4A7	FCGR3A+ Mono
+
+6	GNLY, NKG7	NK
+
+7	FCER1A, CST3	DC
+
+8	PPBP	Platelet
+
+```{r}
+new.cluster.ids <- c("Naive CD4 T", "CD14+ Mono", "Memory CD4 T", "B", "CD8 T", "FCGR3A+ Mono",
+    "NK", "DC", "Platelet")
+names(new.cluster.ids) <- levels(seurat_cut_filtrado)
+seurat_cut_filtrado <- RenameIdents(seurat_cut_filtrado, new.cluster.ids)
+figure_q = DimPlot(seurat_cut_filtrado, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
+figure_q
+ggsave(filename = "../figures/figure_q.jpg",
+       plot = figure_q,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+Aunque pusimos estos nombres, no necesariamente indican el tipo celular exacto.
+Cluster 0: no se ven datos específicos de CD4 T.
+Cluster 1: tiene moléculas de linfocitos T en realidad
+Cluster 2: los genes apuntan a mieloide en realidad.
+Cluster 3: sí es de linfocitos B
+
+
+
+```{r}
+library(ggplot2)
+figure_r <- DimPlot(seurat_cut_filtrado, reduction = "umap", label = TRUE, label.size = 4.5) + xlab("UMAP 1") + ylab("UMAP 2") +
+    theme(axis.title = element_text(size = 18), legend.text = element_text(size = 18)) + guides(colour = guide_legend(override.aes = list(size = 10)))
+
+figure_r
+ggsave(filename = "../figures/figure_r.jpg",
+       plot = figure_r,
+       height = 7, width = 12,
+       quality = 50)
+```
+
+
+```{r}
+print(sessionInfo())
+```
+
+## Conclusiones:
+- El cluster 3 son células B con marcadores como PAX5, CD79A/B, FCRL1, HLA-DR que se ven en el violin, FeaturePlot y heatmap. además de ser un grupo separado en el UMAP.
+- Los clusters 0, 1 y 4 podrían ser poblaciones separadas, pero es difícil demostrarlo con el numero de datos que tenemos.
+- El cluster 2 puede ser problemático al mezclar células que probablemente no son del mismo tipo.
+- Lo que sí estpa respaldado es que el PCA recupera la estructura biológica esperada, separando por tipos celulares.
+
