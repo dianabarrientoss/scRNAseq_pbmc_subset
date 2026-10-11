@@ -1,0 +1,23 @@
+Diagnostico
+Barcodes totales: 927681 
+Barcodes con 0 UMI: 290291 
+Barcodes con >0 UMI: 637390 
+UMI maximo: 32191 
+UMI minimo no-cero: 1 
+   0%   50%   90%   95%   99%  100% 
+    1     1    10    13    26 32191 
+
+Cutoff 10% maximo = 3219.1 UMI
+Barcodes >= cutoff: 3427 (0.37%)
+Barcodes < cutoff: 924254 (99.63%)
+null device 
+          1 
+PDF guardado: /home/jcontreras/proyecto/results/figures/barcode_rank_yalbi_max10.pdf ( 80.7 KB )
+
+Filtrado
+Celulas antes: 927681 
+Celulas despues: 3427 
+Retenidas: 0.37%
+null device 
+          1 
+PDF guardado: /home/jcontreras/proyecto/results/figures/umi_before_after_yalbi.pdf ( 5.3 KB )

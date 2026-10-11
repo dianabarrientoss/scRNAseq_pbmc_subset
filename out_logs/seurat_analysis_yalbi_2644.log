@@ -1,0 +1,22 @@
+
+ El documento es el: File yalbi 
+
+ El tipo de objeto para File yalbi es Seurat 
+
+ El número de genes x células (primero genes, segundo células):  38606 y 927681 
+
+ Las capas del assay de RNA son: counts, data 
+
+ Los genes tienen los atributos: ID, Symbol, Type 
+Todos los conteos son no negativos
+Todos los conteos son enteros
+Summary del tamaño por célula:
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    0.00     0.00     1.00    29.99     4.00 13994.00 
+N barcodes: 927681 | zeros: 290291 | min: 0 | max: 32191 
+
+Columnas de metadatos candidatas:
+character(0)
+
+Número total de células: 927681 
+Número total de genes : 38606 

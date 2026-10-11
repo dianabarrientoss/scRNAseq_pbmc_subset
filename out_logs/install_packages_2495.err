@@ -1,0 +1,157 @@
+Bioconductor version '3.20' is out-of-date; the current release version '3.23'
+  is available with R version '4.6'; see https://bioconductor.org/install
+Bioconductor version 3.20 (BiocManager 1.30.27), R 4.4.1 (2024-06-14)
+Installing package(s) 'rhdf5'
+also installing the dependencies ‘Rhdf5lib’, ‘rhdf5filters’
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/Rhdf5lib_1.28.0.tar.gz'
+Content type 'application/gzip' length 12065121 bytes (11.5 MB)
+==================================================
+downloaded 11.5 MB
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/rhdf5filters_1.18.1.tar.gz'
+Content type 'application/gzip' length 1190919 bytes (1.1 MB)
+==================================================
+downloaded 1.1 MB
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/rhdf5_2.50.2.tar.gz'
+Content type 'application/gzip' length 1310189 bytes (1.2 MB)
+==================================================
+downloaded 1.2 MB
+
+* installing *source* package ‘Rhdf5lib’ ...
+** package ‘Rhdf5lib’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
++ cd src
++ make lib
++ cd src
++ make lib
++ cd c++
++ make lib
++ cd src
++ make lib
+libtool: warning: '/cm/local/apps/gcc/14.2.0/lib/gcc/x86_64-linux-gnu/14.2.0/../../../../lib64/libstdc++.la' seems to be moved
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-Rhdf5lib/00new/Rhdf5lib/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (Rhdf5lib)
+* installing *source* package ‘rhdf5filters’ ...
+** package ‘rhdf5filters’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-rhdf5filters/00new/rhdf5filters/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (rhdf5filters)
+* installing *source* package ‘rhdf5’ ...
+** package ‘rhdf5’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
+using C++ compiler: ‘g++ (GCC) 14.2.0’
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-rhdf5/00new/rhdf5/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (rhdf5)
+
+The downloaded source packages are in
+	‘/tmp/RtmpOiF9PW/downloaded_packages’
+Bioconductor version 3.20 (BiocManager 1.30.27), R 4.4.1 (2024-06-14)
+Installing package(s) 'LoomExperiment'
+also installing the dependencies ‘SingleCellExperiment’, ‘HDF5Array’
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/SingleCellExperiment_1.28.1.tar.gz'
+Content type 'application/gzip' length 985694 bytes (962 KB)
+==================================================
+downloaded 962 KB
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/HDF5Array_1.34.0.tar.gz'
+Content type 'application/gzip' length 8107009 bytes (7.7 MB)
+==================================================
+downloaded 7.7 MB
+
+trying URL 'https://bioconductor.org/packages/3.20/bioc/src/contrib/LoomExperiment_1.24.0.tar.gz'
+Content type 'application/gzip' length 259831 bytes (253 KB)
+==================================================
+downloaded 253 KB
+
+* installing *source* package ‘SingleCellExperiment’ ...
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (SingleCellExperiment)
+* installing *source* package ‘HDF5Array’ ...
+** package ‘HDF5Array’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-HDF5Array/00new/HDF5Array/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (HDF5Array)
+* installing *source* package ‘LoomExperiment’ ...
+** package ‘LoomExperiment’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (LoomExperiment)
+
+The downloaded source packages are in
+	‘/tmp/RtmpOiF9PW/downloaded_packages’

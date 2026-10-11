@@ -1,0 +1,120 @@
+/cm/local/apps/slurm/var/spool/job02530/slurm_script: line 12: moduel: command not found
+Downloading GitHub repo mojaveazure/seurat-disk@HEAD
+Installing 4 packages: rlang, fs, igraph, hdf5r
+Installing packages into ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs’
+(as ‘lib’ is unspecified)
+trying URL 'https://cloud.r-project.org/src/contrib/rlang_1.3.0.tar.gz'
+Content type 'application/x-gzip' length 784080 bytes (765 KB)
+==================================================
+downloaded 765 KB
+
+trying URL 'https://cloud.r-project.org/src/contrib/fs_2.1.0.tar.gz'
+Content type 'application/x-gzip' length 1471347 bytes (1.4 MB)
+==================================================
+downloaded 1.4 MB
+
+trying URL 'https://cloud.r-project.org/src/contrib/igraph_2.3.3.tar.gz'
+Content type 'application/x-gzip' length 5215250 bytes (5.0 MB)
+==================================================
+downloaded 5.0 MB
+
+trying URL 'https://cloud.r-project.org/src/contrib/hdf5r_1.3.16.tar.gz'
+Content type 'application/x-gzip' length 1921658 bytes (1.8 MB)
+==================================================
+downloaded 1.8 MB
+
+ERROR: failed to lock directory ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs’ for modifying
+Try removing ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-rlang’
+* installing *source* package ‘fs’ ...
+** package ‘fs’ successfully unpacked and MD5 sums checked
+** using staged installation
+Package libuv was not found in the pkg-config search path.
+Perhaps you should add the directory containing `libuv.pc'
+to the PKG_CONFIG_PATH environment variable
+Package 'libuv', required by 'virtual:world', not found
+Building static libuv
+** libs
+using C++ compiler: ‘g++ (GCC) 14.2.0’
+/bin/sh: line 2: cmake: command not found
+make: *** [Makevars:44: libuv] Error 127
+ERROR: compilation failed for package ‘fs’
+* removing ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/fs’
+* installing *source* package ‘hdf5r’ ...
+** package ‘hdf5r’ successfully unpacked and MD5 sums checked
+** using staged installation
+configure: WARNING: Unable to compile HDF5 test program
+configure: WARNING: Unable to compile HDF5_HL test program
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-hdf5r/00new/hdf5r/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+ERROR: loading failed
+* removing ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/hdf5r’
+* installing *source* package ‘igraph’ ...
+** package ‘igraph’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (GCC) 14.2.0’
+using C++ compiler: ‘g++ (GCC) 14.2.0’
+vendor/cigraph/vendor/glpk/draft/glpmat.c: In function ‘_glp_mat_amd_order1’:
+vendor/cigraph/vendor/glpk/draft/glpmat.c:515:7: warning: ‘memset’ specified bound between 18446744065119617024 and 18446744073709551612 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  515 |       memset(&P_per[n+1], 0, n * sizeof(int));
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/draft/glpmat.c: In function ‘_glp_mat_symamd_ord’:
+vendor/cigraph/vendor/glpk/draft/glpmat.c:557:7: warning: ‘memset’ specified bound between 18446744065119617024 and 18446744073709551612 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  557 |       memset(&P_per[n+1], 0, n * sizeof(int));
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/misc/keller.c: In function ‘_glp_kellerman’:
+vendor/cigraph/vendor/glpk/misc/keller.c:107:7: warning: ‘memset’ specified bound between 18446744065119617024 and 18446744073709551612 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  107 |       memset(&W->pos[1], 0, sizeof(int) * n);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/misc/keller.c:112:7: warning: ‘memset’ specified bound between 18446744065119617024 and 18446744073709551612 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  112 |       memset(&V->pos[1], 0, sizeof(int) * n);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/misc/wclique1.c: In function ‘_glp_wclique1’:
+vendor/cigraph/vendor/glpk/misc/wclique1.c:111:7: warning: ‘memset’ specified bound between 18446744071562067968 and 18446744073709551615 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  111 |       memset(&skip[1], 0, sizeof(char) * n);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/misc/wclique1.c:113:7: warning: ‘memset’ specified bound between 18446744071562067968 and 18446744073709551615 exceeds maximum object size 9223372036854775807 [-Wstringop-overflow=]
+  113 |       memset(&d_flag[1], 0, sizeof(char) * n);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vendor/cigraph/vendor/glpk/npp/npp6.c: In function ‘_glp_npp_sat_encode_sum_ax’:
+vendor/cigraph/vendor/glpk/npp/npp6.c:853:17: warning: ‘__builtin_memset’ writing between 256 and 17179869176 bytes into a region of size 248 overflows the destination [-Wstringop-overflow=]
+  853 |          set[k] = NULL;
+      |                 ^
+vendor/cigraph/vendor/glpk/npp/npp6.c:836:15: note: at offset 8 into destination object ‘set’ of size 256
+  836 |       NPPLSE *set[1+NBIT_MAX], *lse;
+      |               ^~~
+installing to /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/00LOCK-igraph/00new/igraph/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+ERROR: loading failed
+* removing ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/igraph’
+
+The downloaded source packages are in
+	‘/tmp/Rtmp5S6m8h/downloaded_packages’
+Installing package into ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs’
+(as ‘lib’ is unspecified)
+ERROR: dependency ‘hdf5r’ is not available for package ‘SeuratDisk’
+* removing ‘/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/libraries/Rlibs/SeuratDisk’
+Warning messages:
+1: In i.p(...) : installation of package ‘rlang’ had non-zero exit status
+2: In i.p(...) : installation of package ‘fs’ had non-zero exit status
+3: In i.p(...) : installation of package ‘hdf5r’ had non-zero exit status
+4: In i.p(...) : installation of package ‘igraph’ had non-zero exit status
+5: In i.p(...) :
+  installation of package ‘/tmp/Rtmp5S6m8h/file26e41e720cf5f2/SeuratDisk_0.0.0.9021.tar.gz’ had non-zero exit status

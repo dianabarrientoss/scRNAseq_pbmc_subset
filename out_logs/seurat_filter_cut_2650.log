@@ -1,0 +1,23 @@
+Diagnostico
+Barcodes totales: 10000 
+Barcodes con 0 UMI: 3157 
+Barcodes con >0 UMI: 6843 
+UMI maximo: 18483 
+UMI minimo no-cero: 1 
+   0%   50%   90%   95%   99%  100% 
+    1     2    11    14    27 18483 
+
+Cutoff 10% maximo = 1848.3 UMI
+Barcodes >= cutoff: 44 (0.44%)
+Barcodes < cutoff: 9956 (99.56%)
+null device 
+          1 
+PDF guardado: /home/jcontreras/proyecto/results/figures/barcode_rank_cut_max10.pdf ( 21 KB )
+
+Filtrado
+Celulas antes: 10000 
+Celulas despues: 44 
+Retenidas: 0.44%
+null device 
+          1 
+PDF guardado: /home/jcontreras/proyecto/results/figures/umi_before_after_cut.pdf ( 5.4 KB )

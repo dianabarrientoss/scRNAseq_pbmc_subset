@@ -1,0 +1,21 @@
+class: LoomExperiment 
+dim: 38606 927681 
+metadata(4): CreatedWith LOOM_SPEC_VERSION LoomExperiment-class
+  MatrixName
+assays(1): counts
+rownames(38606): ENSG00000290825 ENSG00000243485 ... ENSG00000278817
+  ENSG00000277196
+rowData names(3): ID Symbol Type
+colnames(927681): AAACCCAAGAAACACT-1 AAACCCAAGAAACTAC-1 ...
+  TTTGTTGTCTTTCCGG-1 TTTGTTGTCTTTGCAT-1
+colData names(0):
+rowGraphs(0): NULL
+colGraphs(0): NULL
+
+El tipo de experimento usado es: SingleCellLoomExperiment 
+
+El número de genes x células (El primer valor corresponde al número de genes y el segundo al de células):  38606 927681 
+
+ La matriz de conteos se llama: counts 
+
+ Los genes tienen los atributos: ID Symbol Type 

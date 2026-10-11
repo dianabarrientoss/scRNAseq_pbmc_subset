@@ -1,0 +1,10 @@
+/cm/local/apps/slurm/var/spool/job02519/slurm_script: line 20: warning: here-document at line 13 delimited by end-of-file (wanted `EOF')
+Loading required package: SeuratObject
+Loading required package: sp
+
+Attaching package: ‘SeuratObject’
+
+The following objects are masked from ‘package:base’:
+
+    intersect, t
+

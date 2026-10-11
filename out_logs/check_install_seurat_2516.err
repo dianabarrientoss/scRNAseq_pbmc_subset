@@ -1,0 +1,4 @@
+Bioconductor version 3.20 (BiocManager 1.30.27), R 4.4.1 (2024-06-14)
+Warning message:
+package(s) not installed when version(s) same as or greater than current; use
+  `force = TRUE` to re-install: 'Seurat' 

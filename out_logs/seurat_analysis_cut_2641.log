@@ -1,0 +1,22 @@
+
+ El documento es el: File cut 
+
+ El tipo de objeto para File cut es Seurat 
+
+ El número de genes x células (primero genes, segundo células):  38606 y 10000 
+
+ Las capas del assay de RNA son: counts 
+
+ Los genes tienen los atributos:  
+Todos los conteos son no negativos
+Todos los conteos son enteros
+Summary del tamaño por célula:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0     0.0     1.0    26.6     4.0 11666.0 
+N barcodes: 10000 | zeros: 3157 | min: 0 | max: 18483 
+
+Columnas de metadatos candidatas:
+character(0)
+
+Número total de células: 10000 
+Número total de genes : 38606 

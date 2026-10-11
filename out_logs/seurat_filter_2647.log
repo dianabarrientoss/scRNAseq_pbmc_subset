@@ -1,0 +1,29 @@
+Summary:
+barcodes: 927681 
+valores unicos: 3465 
+numero con 0 UMI: 290291 
+numero con < 100 UMI: 923497 
+numero con >= 500 UMI: 4055 
+   0%   25%   50%   75%   90%   95%   99%  100% 
+    0     0     1     4     9    12    21 32191 
+
+Corte:
+Percentil 99 21 
+Cutoff (0.10 * P99): 2.1 
+Barcodes >= cutoff 271471 (29.26%)
+Barcodes < cutoff: 656210 (70.74%)
+null device 
+          1 
+PDF barcode-rank guardado:  /home/jcontreras/proyecto/results/figures/barcode_rank_cutoff_yalbi.pdf ( 79.9 KB )
+Resultados de emptyDrops:
+Barcodes testeados: 271471 
+Barcodes ambientales (NA): 656210 
+Celulas (FDR <= 0.001): 0 
+=============================================
+
+null device 
+          1 
+ Filtrado:
+Celulas antes: 927681 
+Celulas despues: 0 
+Retenidas: 0.00%

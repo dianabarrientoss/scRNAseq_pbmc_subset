@@ -1,0 +1,29 @@
+Summary:
+barcodes: 10000 
+valores unicos: 86 
+numero con 0 UMI: 3157 
+numero con < 100 UMI: 9953 
+numero con >= 500 UMI: 46 
+   0%   25%   50%   75%   90%   95%   99%  100% 
+    0     0     1     4     9    12    21 18483 
+
+Corte:
+Percentil 99 21 
+Cutoff (0.10 * P99): 2.1 
+Barcodes >= cutoff 3051 (30.51%)
+Barcodes < cutoff: 6949 (69.49%)
+null device 
+          1 
+PDF barcode-rank guardado:  /home/jcontreras/proyecto/results/figures/barcode_rank_cutoff_cut.pdf ( 20.7 KB )
+Resultados de emptyDrops:
+Barcodes testeados: 3051 
+Barcodes ambientales (NA): 6949 
+Celulas (FDR <= 0.001): 0 
+=============================================
+
+null device 
+          1 
+ Filtrado:
+Celulas antes: 10000 
+Celulas despues: 0 
+Retenidas: 0.00%

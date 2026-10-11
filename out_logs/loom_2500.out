@@ -1,0 +1,20 @@
+Clase de counts: DelayedMatrix 
+Trabajando con el objeto de clase (muestra de 5 000 gotas, con lote sintetico) 
+class: SingleCellLoomExperiment 
+dim: 38606 5000 
+metadata(4): CreatedWith LOOM_SPEC_VERSION LoomExperiment-class
+  MatrixName
+assays(1): counts
+rownames(38606): ENSG00000290825 ENSG00000243485 ... ENSG00000278817
+  ENSG00000277196
+rowData names(4): ID Symbol Type simbolo
+colnames(5000): AAACCCAAGGATTCAA-1 AAACCCAAGTTGAAAC-1 ...
+  TTTGTTGTCGTTCCCA-1 TTTGTTGTCTGGACCG-1
+colData names(2): lote donante
+reducedDimNames(0):
+mainExpName: NULL
+altExpNames(0):
+rowGraphs(0): NULL
+colGraphs(0): NULL
+                objeto genes celulas   suma lote
+1 SingleCellExperiment 38606    5000 149954 TRUE

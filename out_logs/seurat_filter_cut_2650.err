@@ -1,0 +1,15 @@
+Loading required package: SeuratObject
+Loading required package: sp
+
+Attaching package: ‘SeuratObject’
+
+The following objects are masked from ‘package:base’:
+
+    intersect, t
+
+Error in gzfile(file, mode) : cannot open the connection
+Calls: saveRDS -> gzfile
+In addition: Warning message:
+In gzfile(file, mode) :
+  cannot open compressed file '/home/jcontreras/proyecto/data/counts_filtrado_cut.rds', probable reason 'Permission denied'
+Execution halted
