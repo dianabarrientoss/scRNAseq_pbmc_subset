@@ -1,0 +1,26 @@
+
+---
+title: "PERMISOS A CARPETAS Y SCRIPTS"
+output: html_notebook
+author: "Barrientos-González Diana, Cervantes-Levario Román & Contreras-Rivera Jair"
+date: "20-09-2026"
+---
+
+## OTORGAR PERMISOS A LA CARPETA Y SUS ARCHIVOS
+
+Dado que la carpeta se encuentra en el usuario dbarrientos, es necesario otorgar permisos al resto del equipo para que puedna realizar modificaciones.
+Este mismo comando se corrió en las demás carpetas
+
+```{bash}
+# Se comprueba que los usuarios se encuentren en un mismo equipo
+(base) [dbarrientos@node01 scripts]$ id dbarrientos
+id jcontreras
+uid=1007(dbarrientos) gid=1004(bioinfo3) groups=1004(bioinfo3)
+uid=1009(jcontreras) gid=1004(bioinfo3) groups=1004(bioinfo3)
+# Corremos el comando que cambia las propiedades de rwx en el directorio dando permiso a todo aquel que comprta el grupod e trabajo 1004(bioinfo3)
+(base) [dbarrientos@node01 scripts]$ chgrp -R bioinfo3 .
+chmod -R g+rwX .
+find . -type d -exec chmod g+s {} +
+```
+
+> Nota: Creemos esto puede ser útil para los demás equipos al momento de correr nuestro script.
