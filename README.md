@@ -396,7 +396,10 @@ Para contestar estas preguntas, se utilizó el archivo loom proporcionado ademá
 A continuación se explicará la lógica del código de cada sección y se explicarán los outputs para contestar las preguntas, los cuáles están disponibles en el la carpeta `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/out_logs/` de la forma:
 
 
-- Para el archivo cut: seurat_analysis_cut_%j.log, seurat_analysis_cut_%j.err - Para el archvio Yalbi: seurat_analysis_yalbi_%j.log, seurat_analysis_yalbi_%j.err ### 1. ¿Son cuentas crudas?
+- Para el archivo cut: seurat_analysis_cut_%j.log, seurat_analysis_cut_%j.err - Para el archvio Yalbi: seurat_analysis_yalbi_%j.log, seurat_analysis_yalbi_%j.err
+-
+
+### 1. ¿Son cuentas crudas?
 
 
 En el documento previamente proporcionado, se especifica que si las cuentas poseen decimales, estas no son crudas dado que pudo haber una transformación o proceso de normalización. A parte de verificar si todos son decimales se verificará si todos los números son positivos, otro factor que puede indicar normalización o transformación (logaritmo, por ejemplo) 
