@@ -473,13 +473,25 @@ Consultando la información en la página web de los datos, podemos concluir que
 ## Preguntas iniciales 
 
 Todas estas preugntas se pueden hacer con los out logs 
-Para el archivo looom:
-1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 927681 2. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes 
-Para el archivo cut: 
-1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 10000 
-2. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes 
-Para el archivo seurat Yalbi 
-1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 927681 2. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes 
+
+### Para el archivo looom:
+
+1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 927681
+
+3. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes
+
+### Para el archivo cut: 
+1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 10000
+
+3. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes
+
+
+### Para el archivo seurat Yalbi 
+
+1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 927681
+
+2. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes
+
 Aquí se hace la observacion que la mayoría son creos (290291)
 
 
