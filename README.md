@@ -371,76 +371,115 @@ Dentro de estos documentos se hace el análisis final.
 | `proyecto-equipo-B_1000cells.loom` | 332 KB, 5 oct 19:26 | Loom de 1,000 células (con diagnóstico) | `loom_to_seurat_v4.r` (por el nombre y la hora) |
 | `proyecto-equipo-B_10k.loom` | 5 KB, 1 oct | Intento temprano de loom de 10 k células; casi vacío |  Ningún script que tengamos lo genera |
 
-##Exploración inicial de los datos:
+## Exploración inicial de los datos:
 
 Debido a que tuvimos problemas con seurat disk, en donde no estaba instalado en R del cluster y en rstudio, donde estaba presente, había problemas de de espacio para convertirlo a seurat. Debido a esto, los profesores, en conjunto con lxs profesores, decidimos usar 3 opciones. 
+
 1.- Hacer el analisis inicial con loom. Dado que se nos pide un archivo seurat para filtrar este archivo solo continuará hasta la exploración, a este lo llamaremos `loom` 
+
 2.- Hacer una transformación seurat nosotros mismos usando rstudio en el cluster con un archivo cortado, a este lo llamaremos `cut` en esta seccion 
+
 3.- Analizar el archivo transformado por los lxs doctores, el cuál fue igualmente cortado y transformado en rstudio, a este archivo lo llamaremos `yalbi` 
+
 ### Introducción: 
+
 Para contestar estas preguntas, se utilizó el archivo loom proporcionado además de dos librerías de R previamente descargadas: `rhdf5` y `LoomExperiment`. El código en R para contestar las preguntas se encuentra en los scripts 
+
+
 - **Para el archivo loom:** 
 `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/loom_analysis.R`, el cual se puede lanzar en SLURM con el job 
-`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/loom_analysis.sh` 
+`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/loom_analysis.sh`
+
+
 - **Para el archivo cut:** 
 `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_cut.R`, el cual se puede lanzar en SLURRM con el job 
-`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_cut.sh` 
+`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_cut.sh`
+
+
 - **Para el archivo Yalbi:** 
 `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_yalbi.R`, el cuál se puede lanzar en SLURM con el job 
-`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_yalbi.sh` 
-A continuación se explicará la lógica del código de cada sección y se explicarán los outputs para contestar las preguntas, los cuáles están disponibles en el la carpeta `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/out_logs/` de la forma:.
-- Para el archivo loom: 
-- Para el archivo cut: seurat_analysis_cut_%j.log, seurat_analysis_cut_%j.err - Para el archvio Yalbi: seurat_analysis_yalbi_%j.log, seurat_analysis_yalbi_%j.err ### 1. ¿Son cuentas crudas? 
+`/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/scripts/seurat_analysis_yalbi.sh`
+
+
+A continuación se explicará la lógica del código de cada sección y se explicarán los outputs para contestar las preguntas, los cuáles están disponibles en el la carpeta `/mnt/data/bioinfo3/dbarrientos/proyecto_integrador/out_logs/` de la forma:
+
+
+- Para el archivo cut: seurat_analysis_cut_%j.log, seurat_analysis_cut_%j.err - Para el archvio Yalbi: seurat_analysis_yalbi_%j.log, seurat_analysis_yalbi_%j.err
+
+
+### 1. ¿Son cuentas crudas? 
+
 En el documento previamente proporcionado, se especifica que si las cuentas poseen decimales, estas no son crudas dado que pudo haber una transformación o proceso de normalización. A parte de verificar si todos son decimales se verificará si todos los números son positivos, otro factor que puede indicar normalización o transformación (logaritmo, por ejemplo) 
 Si revisamos el documento del de los logs para cada job, nos podemos dar cuenta que que en una sección dice: 
+
 Para el archivo loom: 
-```bash 
-``` 
+
+
+```bash
+Todos los archivos son enteros no negativos
+```
+
 Para el archivo seurat cut: 
-```bash 
-Todos los conteos son no negativos 
-Todos los conteos son enteros 
-``` 
-Además de que en el summary nos arroja: 
-```bash 
-Min. 1st Qu. Median Mean 3rd Qu. Max. 
-0.0 0.0 1.0 26.6 4.0 11666.0 
-N barcodes: 10000 | zeros: 3157 | min: 0 | max: 18483 
-``` 
-Para el archivo yalbi nos arroja: 
+
 ```bash 
 Todos los conteos son no negativos 
 Todos los conteos son enteros 
 ```
+
+Además de que en el summary nos arroja: 
+
+```bash 
+Min. 1st Qu. Median Mean 3rd Qu. Max. 
+0.0 0.0 1.0 26.6 4.0 11666.0 
+N barcodes: 10000 | zeros: 3157 | min: 0 | max: 18483 
+```
+
+Para el archivo yalbi nos arroja: 
+
+```bash 
+Todos los conteos son no negativos 
+Todos los conteos son enteros 
+```
+
 Y en el summary nos arroja: 
+
 ```bash 
 Min. 1st Qu. Median Mean 3rd Qu. Max. 
 0.00 0.00 1.00 29.99 4.00 13994.00 
 N barcodes: 927681 | zeros: 290291 | min: 0 | max: 32191 
-``` 
-Todos estos son pruebas que para las 3 matrices, todos los conteos son crudos ### 2. ¿Ya estan fitlradas las celulas? 
+```
+
+Todos estos son pruebas que para las 3 matrices, todos los conteos son crudos 
+
+### 2. ¿Ya estan fitlradas las celulas? 
+
 Para contestar estas preguntas, haremos gráficas de las cruvas de los UMI, en donde se ordenan los UMI y suman los UMIs totales de cada una de las ceuluas y se grafica una curva. Si es que observamos células con poca cantidad de transcritos totales, entonces podmemos concluir que no estan filtradas. 
+
 Para el archivo loom, podemos hacerlo con emptydroplets directmanete, sin embargo para los archvios seurat, dado que estan cortados por la memoria, **emprtydroplets no permite hacer las graficas con tan pocos transcritos** pro lo tanto se desarrollo una funcion similar, 
 que igualmente ordena y grafica los UMIs. Las graficas se pueden encotnrar en /mnt/data/bioinfo3/dbarrientos/proyecto_integrador/figures/ 
-Las graficas son: 
-Para el archivo loom: 
-Aqui pones la de loom 
-Para el archivo cut: 
-Aqui pones la de cut 
-Para el archivo seurat 
-Aqui pones yalbi
+
 Si observamos en las 3, en todas hay células con pocos conteos, además, en el summary de cut y yalbi aparecia que había células con 0 transcritos, debido a esto podemos concluir que las células no están filtradas 
+
 ### 3. ¿Donde estan los metadados de lote, donante y condicion? 
-Según los profesores durante el curso, no tiene sentido el buscar un lote o una condición debido a que no estamos haciendo analísis de expresión diferencial. Adicionalmente, al momento de consultar los metadatos en el archivo, se pudo apreciar que estos solo tenían referentes a los genes, no a las células. Para corroborar se incluyó en el código que dentro del archivo loom, se buscaran todas las palabras que hicieran alusión a estas caracterísiticas. 
-Los resutlados para los 3 archivos fueron 
+
+Según los profesores durante el curso, no tiene sentido el buscar un lote o una condición debido a que no estamos haciendo analísis de expresión diferencial. Adicionalmente, al momento de consultar los metadatos en el archivo, se pudo apreciar que estos solo tenían referentes a los genes, no a las células. Para corroborar se incluyó en el código que dentro del archivo loom, se buscaran todas las palabras que hicieran alusión a estas caracterísiticas. Los resutlados para los 3 archivos fueron 
+
 ```bash 
 character(0) 
-``` 
+```
+
 Por lo cuál no se encotró ninguna información de lote o condicion, por lo cual se llegó a la conlcusión de que no había ninguna sección o bloque que se refirierar a metadatos, lote, donante o condición. Sin embargo pudimos llegar a la información del dataset original gracias al link: 
+
 https://www.10xgenomics.com/datasets/peripheral-blood-mononuclear-cells-pbm-cs-from-a healthy-donor-manual-channel-5-3-1-standard-3-1-0 
-Por lo cuál, en dado caso que se requiera información adicional, podemos consultarla aquí. ### 4. ¿Qué versión de anotación de genes se usó? 
+
+Por lo cuál, en dado caso que se requiera información adicional, podemos consultarla aquí. 
+
+### 4. ¿Qué versión de anotación de genes se usó? 
+
 Consultando la información en la página web de los datos, podemos concluir que se utilizó la versión del genoma GRCh38-3.0.0 con la versión del pipeline de 3.1.0 y una química de Sinlge Cell 3` v3. Dado que los archivos seurat son submuestras del loom, los 3 tienen la misma anotación 
+
 ## Preguntas iniciales 
+
 Todas estas preugntas se pueden hacer con los out logs 
 Para el archivo looom:
 1. ¿Cuántos genes y cuántas células hay? genes: 38606 y células 927681 2. ¿Sobrevivieron los metadatos de lote? No. El archivo original no contiene metadatos de lote ni de donante. La verificación solo indica si la conversión preserva esas etiquetas, no dice nada biológico sobre lotes 
