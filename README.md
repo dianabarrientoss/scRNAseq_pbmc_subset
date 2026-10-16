@@ -371,7 +371,7 @@ Dentro de estos documentos se hace el análisis final.
 | `proyecto-equipo-B_1000cells.loom` | 332 KB, 5 oct 19:26 | Loom de 1,000 células (con diagnóstico) | `loom_to_seurat_v4.r` (por el nombre y la hora) |
 | `proyecto-equipo-B_10k.loom` | 5 KB, 1 oct | Intento temprano de loom de 10 k células; casi vacío |  Ningún script que tengamos lo genera |
 
-##Exploración inicial de los datos:
+## Exploración inicial de los datos:
 
 Debido a que tuvimos problemas con seurat disk, en donde no estaba instalado en R del cluster y en rstudio, donde estaba presente, había problemas de de espacio para convertirlo a seurat. Debido a esto, los profesores, en conjunto con lxs profesores, decidimos usar 3 opciones. 
 1.- Hacer el analisis inicial con loom. Dado que se nos pide un archivo seurat para filtrar este archivo solo continuará hasta la exploración, a este lo llamaremos `loom` 
